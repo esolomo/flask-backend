@@ -1,0 +1,183 @@
+webfutur.py:3: ExtDeprecationWarning: Importing flask.ext.pymongo is deprecated, use flask_pymongo instead.
+  from flask.ext.pymongo import PyMongo
+ * Running on https://0.0.0.0:443/ (Press CTRL+C to quit)
+ * Restarting with stat
+webfutur.py:3: ExtDeprecationWarning: Importing flask.ext.pymongo is deprecated, use flask_pymongo instead.
+  from flask.ext.pymongo import PyMongo
+ * Debugger is active!
+ * Debugger PIN: 335-219-652
+82.132.223.41 - - [26/Oct/2017 12:14:23] "GET / HTTP/1.1" 302 -
+82.132.223.41 - - [26/Oct/2017 12:14:24] "GET /ftp HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:27] "GET /logout HTTP/1.1" 302 -
+82.132.223.41 - - [26/Oct/2017 12:14:27] "GET / HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:43] "POST /login HTTP/1.1" 302 -
+82.132.223.41 - - [26/Oct/2017 12:14:43] "GET / HTTP/1.1" 302 -
+82.132.223.41 - - [26/Oct/2017 12:14:43] "GET /ftp HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:51] "GET /ftp/wfsv100.webfutur.com HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1997, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1985, in wsgi_app
+    response = self.handle_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1540, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1982, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1614, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1517, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1612, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1598, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/data/targetweb_ftpmgr/webfutur.py", line 117, in ftp_domain
+    ftp_list = backend.list_users(domain)
+  File "/data/targetweb_ftpmgr/backend.py", line 24, in list_users
+    result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 687, in host_prompting_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 1090, in run
+    shell_escape=shell_escape, capture_buffer_size=capture_buffer_size,
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 933, in _run_command
+    capture_buffer_size=capture_buffer_size)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 815, in _execute
+    worker.raise_if_needed()
+  File "/usr/local/lib/python2.7/dist-packages/fabric/thread_handling.py", line 12, in wrapper
+    callable(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/io.py", line 231, in input_loop
+    byte = msvcrt.getch() if win32 else sys.stdin.read(1)
+IOError: [Errno 9] Bad file descriptor
+82.132.223.41 - - [26/Oct/2017 12:14:51] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:51] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:52] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:53] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:53] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:14:54] "GET /ftp/wfsv100.webfutur.com?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:06] "GET /ftp/obm.maisonsmca.fr HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1997, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1985, in wsgi_app
+    response = self.handle_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1540, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1982, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1614, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1517, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1612, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1598, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/data/targetweb_ftpmgr/webfutur.py", line 117, in ftp_domain
+    ftp_list = backend.list_users(domain)
+  File "/data/targetweb_ftpmgr/backend.py", line 24, in list_users
+    result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 687, in host_prompting_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 1090, in run
+    shell_escape=shell_escape, capture_buffer_size=capture_buffer_size,
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 930, in _run_command
+    channel=default_channel(), command=wrapped_command, pty=pty,
+  File "/usr/local/lib/python2.7/dist-packages/fabric/state.py", line 435, in default_channel
+    chan = _open_session()
+  File "/usr/local/lib/python2.7/dist-packages/fabric/state.py", line 416, in _open_session
+    transport = connections[env.host_string].get_transport()
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 159, in __getitem__
+    self.connect(key)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 151, in connect
+    user, host, port, cache=self, seek_gateway=seek_gateway)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 613, in connect
+    raise NetworkError(msg, e)
+NetworkError: Timed out trying to connect to obm.maisonsmca.fr (tried 1 time)
+82.132.223.41 - - [26/Oct/2017 12:15:06] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:07] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:07] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:07] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:07] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:07] "GET /ftp/obm.maisonsmca.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:10] "GET /ftp/www.latitude360.fr HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1997, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1985, in wsgi_app
+    response = self.handle_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1540, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1982, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1614, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1517, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1612, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1598, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/data/targetweb_ftpmgr/webfutur.py", line 117, in ftp_domain
+    ftp_list = backend.list_users(domain)
+  File "/data/targetweb_ftpmgr/backend.py", line 24, in list_users
+    result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 687, in host_prompting_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 1090, in run
+    shell_escape=shell_escape, capture_buffer_size=capture_buffer_size,
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 933, in _run_command
+    capture_buffer_size=capture_buffer_size)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 815, in _execute
+    worker.raise_if_needed()
+  File "/usr/local/lib/python2.7/dist-packages/fabric/thread_handling.py", line 12, in wrapper
+    callable(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/io.py", line 231, in input_loop
+    byte = msvcrt.getch() if win32 else sys.stdin.read(1)
+IOError: [Errno 9] Bad file descriptor
+82.132.223.41 - - [26/Oct/2017 12:15:11] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:11] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:11] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:11] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:11] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:12] "GET /ftp/www.latitude360.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:17] "GET /ftp/private.reals.fr HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1997, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1985, in wsgi_app
+    response = self.handle_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1540, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1982, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1614, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1517, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1612, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python2.7/dist-packages/flask/app.py", line 1598, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/data/targetweb_ftpmgr/webfutur.py", line 117, in ftp_domain
+    ftp_list = backend.list_users(domain)
+  File "/data/targetweb_ftpmgr/backend.py", line 24, in list_users
+    result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
+  File "/usr/local/lib/python2.7/dist-packages/fabric/network.py", line 687, in host_prompting_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 1090, in run
+    shell_escape=shell_escape, capture_buffer_size=capture_buffer_size,
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 933, in _run_command
+    capture_buffer_size=capture_buffer_size)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/operations.py", line 829, in _execute
+    worker.raise_if_needed()
+  File "/usr/local/lib/python2.7/dist-packages/fabric/thread_handling.py", line 12, in wrapper
+    callable(*args, **kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/fabric/io.py", line 231, in input_loop
+    byte = msvcrt.getch() if win32 else sys.stdin.read(1)
+IOError: [Errno 9] Bad file descriptor
+82.132.223.41 - - [26/Oct/2017 12:15:17] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:18] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:18] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:18] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:18] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+82.132.223.41 - - [26/Oct/2017 12:15:19] "GET /ftp/private.reals.fr?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -

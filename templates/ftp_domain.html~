@@ -1,0 +1,245 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container">
+
+  <!-- Static navbar -->
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+	  <span class="sr-only">Toggle navigation</span>
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	  <span class="icon-bar"></span>
+	</button>
+	<a class="navbar-brand" href="#">WebFutur</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+	<ul class="nav navbar-nav">
+	  <li ><a href="#">Inventory</a></li>
+	  <li class="active"><a href="/ftp">FTP</a></li>
+	  <li><a href="#">DNS</a></li>
+	  </li>
+	</ul>
+        <ul class="nav navbar-nav navbar-right">
+	  <li class="active"><a href="#">{{username}}</a></li>
+	  <li><a href="/logout">logout</a></li>
+	</ul>
+      </div><!--/.nav-collapse -->
+    </div><!--/.container-fluid -->
+  </nav>
+
+<!-- Main component for a primary marketing message or call to action -->
+  <div style="padding-top:20px,padding-bottom:30px">
+    <h2>Domain : {{domain}}</h2>
+    <button type="button" data-toggle="modal" data-target="#AddUser">Add User</button>
+  </div>  
+  <div style="padding-top:20px">
+    <table class="table table-hover table-striped table-bordered" id='ctable'>
+      <thead>
+	<tr>
+	  <th data-field="Username">Username</th>
+	  <th data-field="Homedir">Base directory</th>
+	</tr>
+      </thead>
+      <tbody>	
+	{% for data  in list %}
+	<tr>
+	  <td>{{ data.username }}</td>
+	  <td>{{ data.homedir }}</td>	  
+	  <td><button type="button" data-toggle="modal" data-target="#UpdatePwd{{ data.username }}">Update Password</button></td>
+	  <td><button type="button" data-toggle="modal" data-target="#UpdateBaseDir{{ data.username }}">Update Base dir</button></td>
+	  <td><button type="button" data-toggle="modal" data-target="#RemoveUser{{ data.username }}">Remove User</button></td>
+
+	    <div class="modal fade" id="UpdateBaseDir{{ data.username }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	      <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+		    <h5 class="modal-title" id="exampleModalLabel">Update Data Directory</h5>
+		    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		      <span aria-hidden="true">&times;</span>
+		    </button>
+		  </div>
+		  <div class="modal-body">
+		    <form method="post" action="/datadir">
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">Domain :</label>
+			<input type="text" name=domain class="form-control" value="{{ domain }}" id="recipient-name">
+		      </div>		      
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">username :</label>
+			<input type="text" name=username class="form-control" value="{{ data.username }}" id="recipient-name">
+		      </div>
+		      <div class="form-group">
+			<label for="recipient-text" class="form-control-label">Datadir:</label>
+			<input type="text" name=datadir class="form-control" id="recipient-name">					
+		      </div>
+		      <div class="modal-footer">
+			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			<button type="submit" class="btn btn-primary">Update Base Directory</button>
+		      </div>		      
+		    </form>
+		  </div>
+		</div>
+	      </div>
+	    </div>	    
+	    <div class="modal fade" id="UpdatePwd{{ data.username }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	      <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+		    <h5 class="modal-title" id="exampleModalLabel">Update User Password</h5>
+		    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		      <span aria-hidden="true">&times;</span>
+		    </button>
+		  </div>
+		  <div class="modal-body">
+		    <form  method="post" action="/password">
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">Domain :</label>
+			<input type="text" name=domain class="form-control" value="{{ domain }}" id="recipient-name">
+		      </div>		      
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">username :</label>
+			<input type="text" name=username class="form-control" value="{{ data.username }}" id="recipient-name">
+		      </div>
+		      <div class="form-group">
+			<label for="recipient-text" class="form-control-label">New Password:</label>
+			<input type="text" name=password class="form-control" id="recipient-name">		
+		      </div>
+
+		      <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">close</button>		    		  		   		    			
+			<button type="submit" class="btn btn-primary">Update Password</button>
+		      </div>		      
+		    </form>
+		  </div>
+		</div>
+	      </div>
+	    </div>	    
+	    <div class="modal fade" id="RemoveUser{{ data.username }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	      <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+		    <h5 class="modal-title" id="exampleModalLabel">Remove User</h5>
+		    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		      <span aria-hidden="true">&times;</span>
+		    </button>
+		  </div>
+		  <div class="modal-body">
+		    <form  method="post" action="/remove">
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">Domain :</label>
+			<input type="text" name=domain class="form-control" value="{{ domain }}" id="recipient-name">
+		      </div>		      
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">username :</label>
+			<input type="text" name=username class="form-control" value="{{ data.username }}" id="recipient-name">
+		      </div>
+
+		      <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">close</button>		    		  		   		    			
+			<button type="submit" class="btn btn-primary">Remove User</button>
+		      </div>		      
+		    </form>
+		  </div>
+		</div>
+	      </div>
+	    </div>	    
+	 
+	</tr>
+	{% endfor%}
+	
+      </tbody>
+
+    </table>
+    
+  </div>
+
+
+	    <div class="modal fade" id="AddUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	      <div class="modal-dialog" role="document">
+		<div class="modal-content">
+		  <div class="modal-header">
+		    <h5 class="modal-title" id="exampleModalLabel">Add new user</h5>
+		    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		      <span aria-hidden="true">&times;</span>
+		    </button>
+		  </div>
+		  <div class="modal-body">
+		    <form  method="post" action="/add">
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">Domain :</label>
+			<input type="text" name=domain class="form-control" value="{{ domain }}" id="recipient-name">
+		      </div>		      
+		      <div class="form-group">
+			<label for="recipient-name" class="form-control-label">username :</label>
+			<input type="text" name=username class="form-control"  id="recipient-name">
+		      </div>
+		      <div class="form-group">
+			<label for="recipient-text" class="form-control-label">Password:</label>
+			<input type="text" name=password class="form-control" id="recipient-name">		
+		      </div>
+		      <div class="form-group">
+			<label for="recipient-text" class="form-control-label">Datadir:</label>
+			<input type="text" name=datadir class="form-control" id="recipient-name">		
+		      </div>		      
+
+		      <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal">close</button>		    		  		   		    			
+			<button type="submit" class="btn btn-primary">Add user</button>
+		      </div>		      
+		    </form>
+		  </div>
+		</div>
+	      </div>
+	    </div>	      
+
+  <!-- Update Base Dir Modal -->
+  <!-- Trigger the modal with a button -->
+
+
+  <div id="UpdateBaseDir" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal">&times;</button>
+	  <h4 class="modal-title">Update Base Dir</h4>
+	</div>
+	<div class="modal-body">
+	  <p>Update Base Dir.</p>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Update Passwd Modal -->
+  <div id="UpdatePwd" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal">&times;</button>
+	  <h4 class="modal-title">Update Password</h4>
+	</div>
+	<div class="modal-body">
+	  <p>Update Password.</p>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	</div>
+      </div>
+
+    </div>
+    </div>
+
+</div> <!-- /container -->
+
+{% endblock %}

@@ -1,0 +1,71 @@
+$TTL {{min_ttl}}
+;
+@		IN	SOA		{{soa[0]}}. {{soa[1]}}. (
+			{{serial}}	; numero de serie
+			4H		; rafraichissement 4 heures
+			1H		; tentatives: une heure
+			3W		; expiration : 3 semaines
+			{{min_ttl}})		; minimum: 24 heures
+
+		IN	NS	{{ns[0]}}.
+		IN	NS	{{ns[1]}}.
+
+;
+; "MX entries "
+;
+{% for entry in mx_records %}
+                IN	MX  {{ entry.priority }} 	{{ entry.name }}.
+{% endfor %}
+
+;
+; "Root entries ipv4"
+;
+{% for entry in root_ipv4 %}
+                IN	A	{{ entry }}
+{% endfor %}
+
+;
+; "Root entries ipv6"
+;
+
+{% for entry in root_ipv6 %}
+                IN	AAAA	{{ entry }}
+{% endfor %}
+
+;
+;	Machines "officiels"
+;
+wfsv156		IN	A	92.222.234.201
+		IN	AAAA	2001:41d0:d:35e2::156
+
+;
+;	Alias "ipv4 entries"
+;
+{% for entry in a_records %}
+{{ entry.name.ljust(15) }}      IN          A       {{ entry.destination }} 
+{% endfor %}
+
+;
+;	Alias "ipv6 entries"
+;
+
+{% for entry in aaaa_records %}
+{{ entry.name.ljust(15) }}      IN          AAAA       {{ entry.destination }} 
+{% endfor %}
+
+
+;
+;	Alias "Aliases"
+;
+{% for cname in cname_records %}
+{{ cname.name.ljust(15) }}      IN          CNAME       {{ cname.destination }} 
+{% endfor %}
+
+autodiscover 	300 IN	CNAME	autodiscover.outlook.com.
+webmail		300 IN	CNAME	mail.office365.com.
+
+@		IN	TXT	"v=spf1 include:outlook.com ~all"
+
+ovhcontrol	IN	TXT	"bCVVpfQXYitfvTtbjn6FKg"
+
+

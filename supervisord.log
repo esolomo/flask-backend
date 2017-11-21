@@ -1,0 +1,24 @@
+2017-10-26 12:23:16,795 CRIT Supervisor running as root (no user in config file)
+2017-10-26 12:23:16,798 INFO daemonizing the supervisord process
+2017-10-26 12:23:16,798 INFO supervisord started with pid 13801
+2017-10-26 12:23:17,799 INFO spawned: 'console_targetweb' with pid 13802
+2017-10-26 12:23:18,476 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:23:19,478 INFO spawned: 'console_targetweb' with pid 13810
+2017-10-26 12:23:20,154 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:23:22,157 INFO spawned: 'console_targetweb' with pid 13819
+2017-10-26 12:23:22,839 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:23:25,843 INFO spawned: 'console_targetweb' with pid 13827
+2017-10-26 12:23:26,519 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:23:27,520 INFO gave up: console_targetweb entered FATAL state, too many start retries too quickly
+2017-10-26 12:26:04,142 CRIT Supervisor running as root (no user in config file)
+2017-10-26 12:26:04,145 INFO daemonizing the supervisord process
+2017-10-26 12:26:04,145 INFO supervisord started with pid 13860
+2017-10-26 12:26:05,147 INFO spawned: 'console_targetweb' with pid 13861
+2017-10-26 12:26:05,829 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:26:06,830 INFO spawned: 'console_targetweb' with pid 13869
+2017-10-26 12:26:07,508 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:26:09,511 INFO spawned: 'console_targetweb' with pid 13877
+2017-10-26 12:26:10,187 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:26:13,191 INFO spawned: 'console_targetweb' with pid 13885
+2017-10-26 12:26:13,868 INFO exited: console_targetweb (exit status 1; not expected)
+2017-10-26 12:26:14,869 INFO gave up: console_targetweb entered FATAL state, too many start retries too quickly
