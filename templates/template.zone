@@ -33,39 +33,37 @@ $TTL {{min_ttl}}
 {% endfor %}
 
 ;
-;	Machines "officiels"
+;	Alias "host records"
 ;
-wfsv156		IN	A	92.222.234.201
-		IN	AAAA	2001:41d0:d:35e2::156
+{% for entry in records %}
+{{ entry.name.ljust(15) }}      IN          A       {{ entry.destination }}
+{% if 'destination_ipv6' in entry %}
+		     IN		 AAAA	{{ entry.destination_ipv6 }}
+{% endif %}
 
-;
-;	Alias "ipv4 entries"
-;
-{% for entry in a_records %}
-{{ entry.name.ljust(15) }}      IN          A       {{ entry.destination }} 
-{% endfor %}
-
-;
-;	Alias "ipv6 entries"
-;
-
-{% for entry in aaaa_records %}
-{{ entry.name.ljust(15) }}      IN          AAAA       {{ entry.destination }} 
 {% endfor %}
 
 
 ;
 ;	Alias "Aliases"
 ;
-{% for cname in cname_records %}
-{{ cname.name.ljust(15) }}      IN          CNAME       {{ cname.destination }} 
+{% for cname in cname_no_ttl %}
+{{ cname.name.ljust(15) }}    IN          CNAME       {{ cname.destination }} 
 {% endfor %}
 
-autodiscover 	300 IN	CNAME	autodiscover.outlook.com.
-webmail		300 IN	CNAME	mail.office365.com.
+{% for cname in cname_ttl %}
+{{ cname.name.ljust(15) }}    {{ cname.ttl.ljust(5) }}  IN          CNAME       {{ cname.destination }} 
+{% endfor %}
 
-@		IN	TXT	"v=spf1 include:outlook.com ~all"
 
-ovhcontrol	IN	TXT	"bCVVpfQXYitfvTtbjn6FKg"
+;
+;	TXT entries
+;
+
+{% for txt in txt_records %}
+{{ txt.name.ljust(15) }}      IN          TXT       "{{ txt.entry }}" 
+{% endfor %}
+
+
 
 

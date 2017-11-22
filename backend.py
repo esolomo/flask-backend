@@ -12,6 +12,21 @@ env.key_filename=['/Users/solomo/.ssh/id_rsa']
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+def transfertFileToDNS(server,filename):
+    print("Sending file to primary dns server")
+    env.host_string = server
+    with hide('everything'), settings(warn_only=True):    
+        result = put(filename ,"/tmp/",use_sudo=True)
+    print result
+
+def ReloadDNS(server):
+    print("Reloading DNS")
+    env.host_string = server
+    with hide('everything'), settings(warn_only=True):    
+        result = sudo('/usr/local/sbin/reload_dns.sh')
+    print result
+
+
 def list_users2(server):
     print("hello World")
     env.host_string = server

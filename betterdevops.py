@@ -197,6 +197,7 @@ def get_dns():
         data = zones.find_one({"zone":request.args.get("zone"), "owner":session['username']})
         if data:
             del data['_id']
+            print(data)
             return jsonify(status="Success",results=data)
         return jsonify(status="Error")
     for zone in zones.find({"owner":session['username']}):
@@ -234,19 +235,29 @@ def add_dns_records():
     zone = mongo.db.dns_zone
     username = session['username']
     #username = "mahny@mahny.com"
+    print(request.json)
+    ttl = request.json['ttl'] if 'ttl' in request.json else False
     record = zone.find_one({"owner":username, "zone":request.json["zone"]})
     
     if request.json['type'] == 'A':
         print("TYPE A request")
-        record['A'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        record['A'].append(dict(name=request.json['name'],ttl=ttl,destination=request.json['destination']))
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "A": record['A'] }  })
     elif request.json['type'] == 'AAAA':
         print("TYPE AAAA request")
-        record['AAAA'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        record['AAAA'].append(dict(name=request.json['name'],ttl=ttl,destination=request.json['destination']))
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "AAAA": record['AAAA'] } })
+    elif request.json['type'] == 'ROOT_IPv4':
+        print("TYPE ROOT_IPv4 request")
+        record['ROOT_IPv4'].append(request.json['value'])
+        zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "ROOT_IPv4": record['ROOT_IPv4'] }  })
+    elif request.json['type'] == 'ROOT_IPv6':
+        print("TYPE ROOT_IPv6 request")
+        record['ROOT_IPv6'].append(request.json['value'])
+        zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "ROOT_IPv6": record['ROOT_IPv6'] } })
     elif request.json['type'] == 'CNAME':
         print("TYPE CNAME request")
-        record['CNAME'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        record['CNAME'].append(dict(name=request.json['name'],ttl=ttl,destination=request.json['destination']))
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "CNAME": record['CNAME'] } })
     elif request.json['type'] == 'MX':
         print("TYPE MX request")
@@ -254,12 +265,22 @@ def add_dns_records():
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "MX": record['MX'] } })
     elif request.json['type'] == 'TXT':
         print("TYPE TXT request")
-        record['TXT'].append(dict(name=request.json['name'],entry=request.json['entry']))
+        record['TXT'].append(dict(name=request.json['name'],ttl=ttl,entry=request.json['entry']))
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "TXT": record['TXT'] } })
     elif request.json['type'] == 'SRV':
         print("TYPE SRV request")
-        record['SRV'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        record['SRV'].append(dict(name=request.json['name'],ttl=ttl,destination=request.json['destination']))
         zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "SRV": record['SRV'] } })
+    elif request.json['type'] == 'SOA':
+        print("TYPE SOA request")
+        record['SOA'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "SOA": record['SOA'] } })
+    elif request.json['type'] == 'NS':
+        print("TYPE NS request")
+        record['NS'].append(dict(name=request.json['name'],destination=request.json['destination']))
+        zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "NS": record['NS'] } })
+    elif request.json['type'] == 'TTL':
+        zone.update_one({"owner":username, "zone":request.json["zone"]}, { "$set": { "TTL": { 'base': request.json['ttl'] } } })
     else:
         print("No type defined")
         return jsonify(status="Error")
@@ -298,6 +319,11 @@ def delete_dns():
                     for record in records[type]:
                         if not (name == record['name'] and entry == record['entry']):
                             update_data.append(record)
+                elif type == 'ROOT_IPv4' or type == 'ROOT_IPv6' :
+                    value = request.args.get("value")
+                    for record in records[type]:
+                        if not ( value == record ):
+                            update_data.append(record)
                 records[type] = update_data
                 zones.update_one({"owner":session['username'], "zone":zone}, { "$set": records  })
             return jsonify(status="Success",results=data)
@@ -307,29 +333,58 @@ def delete_dns():
 
 @app.route('/api/config/dns', methods=['POST'])
 def apply_zone_config():
-    print(request.json["zone"])
     zones = mongo.db.dns_zone
     zone  = zones.find_one({"owner":session['username'], "zone":request.json["zone"]})
-    print("Ready to apply this config")
     del zone['_id']
     templateLoader = jinja2.FileSystemLoader( searchpath="./templates/")
     templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True )
     TEMPLATE_FILE = "template.zone"
     template = templateEnv.get_template(TEMPLATE_FILE)
-    print(zone['CNAME'])
-    min_ttl = "1D"
-    root_ipv4 = ["213.186.33.16", "213.186.33.50", "213.186.33.173"]
-    root_ipv6 = ["2001:41d0:1:1b00:213:186:33:50"]
-    soa = ["ns1.webfutur.com", "sysadmin.webfutur.net"]
-    ns = ["ns1.webfutur.com", "ns2.webfutur.com"]
-    serial = arrow.now().format('YYYYMMDDSS')
-    output = template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_records=zone['CNAME'],a_records=zone['A'],aaaa_records=zone['AAAA'],mx_records=zone['MX'])
+    min_ttl = zone['TTL']['base']
+    root_ipv4 = zone['ROOT_IPv4'] 
+    root_ipv6 = zone['ROOT_IPv6'] 
+    soa = zone['SOA'] 
+    ns = zone['NS'] 
+    cname_records = zone['CNAME']
+    a_records = zone['A']
+    aaaa_records = aaaa_records=zone['AAAA']
+    mx_records = zone['MX']
+    txt_records = zone['TXT']
+    cname_no_ttl = []
+    cname_ttl = []
+    #print()
+    for mx_record in cname_records:
+        if "." in mx_record['destination']:
+            print(mx_record['destination'])
+            print('This is a fqdn, you have to add a . ')
+            mx_record['destination'] = mx_record['destination'] + "."
+        if mx_record['ttl'] == False:
+            cname_no_ttl.append(mx_record)    
+        else:
+           cname_ttl.append(mx_record)
+    records = []
+    ref_ipv6 = []
+    for aaaa_record in aaaa_records:
+        for a_record in a_records:
+            if a_record['name'] == aaaa_record['name']:
+                merge = a_record
+                if aaaa_record['destination'] not in ref_ipv6:
+                    merge['destination_ipv6'] = aaaa_record['destination']
+                    ref_ipv6.append(aaaa_record['destination'])
+                records.append(merge)
+            else:
+                records.append(a_record)
+    for record in records:
+        print(record)      
+    serial = arrow.now().format('YYYYMMDDHHmmSS')
+    print(txt_records)
+    output = template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records)
 
-    #t = Template("Hello {{ something }}!") 
-    #output = t.render(something=request.json["zone"])
     with open('./output/' + request.json["zone"] + ".zone", 'w') as f:
         f.write(output)
-    #print(zone)
+    backend.transfertFileToDNS(ns1.webfutur.com, './output/' + request.json["zone"] + ".zone")
+    #ReloadDNS('ns1.webfutur.com')
+    #ReloadDNS('ns2.webfutur.com')
     return jsonify(status="Success")
 
 
@@ -341,7 +396,7 @@ def add_dns():
         soa = ["ns1.webfutur.com", "sysadmin.webfutur.net"]
         ns = ["ns1.webfutur.com", "ns2.webfutur.com"]
         serial = arrow.now().format('YYYYMMDDSS')
-        zone.insert(dict(soa=["ns1.webfutur.com", "sysadmin.webfutur.net"],ns=["ns1.webfutur.com", "ns2.webfutur.com"],owner=session["username"],organisation=organisation,zone=request.json["name"],MX=[],A=[],AAAA=[],CNAME=[],TXT=[],SRV=[]))
+        zone.insert(dict(SOA=["ns1.webfutur.com", "sysadmin.webfutur.net"],NS=["ns1.webfutur.com", "ns2.webfutur.com"],owner=session["username"],organisation=organisation,zone=request.json["name"],ROOT_IPv4=[],ROOT_IPv6=[],TTL=dict(base=300),MX=[],A=[],AAAA=[],CNAME=[],TXT=[],SRV=[]))
         return jsonify(status="Success")
     return jsonify(status="Error ", message="Insertion failed")
 
