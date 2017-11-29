@@ -373,13 +373,10 @@ def apply_zone_config():
                     ref_ipv6.append(aaaa_record['destination'])
                 records.append(merge)
             else:
-                records.append(a_record)
-    for record in records:
-        print(record)      
+                records.append(a_record)      
     serial = arrow.now().format('YYYYMMDDHHmmSS')
     print(txt_records)
     output = template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records)
-
     with open('./output/' + request.json["zone"] + ".zone", 'w') as f:
         f.write(output)
     backend.transfertFileToDNS(ns1.webfutur.com, './output/' + request.json["zone"] + ".zone")
