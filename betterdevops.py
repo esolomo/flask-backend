@@ -176,6 +176,13 @@ def apply_zone_config():
     Zone.config_apply(request.json, session['username'])
     return jsonify(status="Success")
 
+@app.route('/api/deploy/dns', methods=['POST'])
+def deploy_config():
+    print("Deployinh Config")
+    #Zone.config_deploy(session['username'])
+    Zone.config_deploy("mahny@mahny.com")
+    return jsonify(status="Success")
+
 
 
 if __name__ == '__main__':

@@ -188,9 +188,11 @@ def config_apply(data,username):
     ZONE_TEMPLATE_FILE = "template.zone"
     CONF_MASTER_TEMPLATE_FILE = "conf_master_template.tpl"
     CONF_SLAVE_TEMPLATE_FILE = "conf_slave_template.tpl"
+    ZONE_INCLUDE_TEMPLATE_FILE = "zone_include.tpl"
     zone_template = templateEnv.get_template(ZONE_TEMPLATE_FILE)
     conf_master_template = templateEnv.get_template(CONF_MASTER_TEMPLATE_FILE)
     conf_slave_template = templateEnv.get_template(CONF_SLAVE_TEMPLATE_FILE)
+    zone_include_template = templateEnv.get_template(CONF_SLAVE_TEMPLATE_FILE)
     min_ttl = zone['TTL']['base']
     root_ipv4 = zone['ROOT_IPv4'] 
     root_ipv6 = zone['ROOT_IPv6'] 
@@ -229,19 +231,50 @@ def config_apply(data,username):
         f.write(zone_file_output)
     managed_domains = zone['managed_zones']
     managed_domains.append(zone["main_zone"])
-    process = subprocess.Popen(["nslookup", ns[0]  ], stdout=subprocess.PIPE)
-    ns1_ipv4 = process.communicate()[0].split('\n')
-    process = subprocess.Popen(["nslookup", "-query=AAAA", ns[0] ], stdout=subprocess.PIPE)
-    ns1_ipv6 = process.communicate()[0].split('\n')
-    ns1_ipv4_tmp = ns1_ipv4[6].split()
-    ns1_ipv6_tmp = ns1_ipv6[5].split()
+    #process = subprocess.Popen(["nslookup", ns[0]  ], stdout=subprocess.PIPE)
+    #process = subprocess.Popen(["nslookup", "-query=AAAA", ns[0] ], stdout=subprocess.PIPE)
+    ##ns1_ipv4 = process.communicate()[0].split('\n')
+    #ns1_ipv6 = process.communicate()[0].split('\n')
+    #ns1_ipv4_tmp = ns1_ipv4[6].split()
+    #ns1_ipv6_tmp = ns1_ipv6[5].split()
+    ns_server_ipv4 = '91.121.59.230'
+    ns_server_ipv6 = '2001:41d0:d:35e2::163'
     conf_master_output = conf_master_template.render(managed_domains=managed_domains, zone_file=zone['zone_file'])
-    conf_slave_output = conf_slave_template.render(managed_domains=managed_domains, zone_file=zone['zone_file'], primary_ns_ip_ipv4=ns1_ipv4_tmp[1], primary_ns_ip_ipv6=ns1_ipv6_tmp[4])
-    with open('./output/' + zone["zone"] + ".conf", 'w') as f:
+    conf_slave_output = conf_slave_template.render(managed_domains=managed_domains, zone_file=zone['zone_file'], primary_ns_ip_ipv4=ns_server_ipv4, primary_ns_ip_ipv6=ns_server_ipv6)
+    with open('./output/' + zone["zone"] + ".conf_master", 'w') as f:
         f.write(conf_master_output)
-    with open('./output/' + zone["zone"] + ".conf_2", 'w') as f:
+    with open('./output/' + zone["zone"] + ".conf_slave", 'w') as f:
         f.write(conf_slave_output)
+    backend.transfertConfFile('ns1.webfutur.com', './output/' + zone["zone"] + ".conf_master", zone["zone"] + ".conf")
+    backend.transfertConfFile('ns2.webfutur.com', './output/' + zone["zone"] + ".conf_slave", zone["zone"] + ".conf")
     #backend.transfertFileToDNS(ns1.webfutur.com, './output/' + data["zone"] + ".zone")
+    #ReloadDNS('ns1.webfutur.com')
+    #ReloadDNS('ns2.webfutur.com')
+    return True
+
+###
+### Deploy Zone Config 
+###
+
+def config_deploy(username):
+
+    zones = mongo.db.dns_zone
+    all_zones  = zones.find({"owner":username})
+    data = []
+    for zone in all_zones:
+        del zone['_id']
+        data.append(zone)
+        todeploy = { 'zone':zone['zone'] }
+        config_apply(todeploy,username)
+
+    templateLoader = jinja2.FileSystemLoader( searchpath="./templates/")
+    templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True )
+    ZONE_INCLUDE_TEMPLATE_FILE = "zone_include.tpl"
+    zone_include_template = templateEnv.get_template(ZONE_INCLUDE_TEMPLATE_FILE)
+    zone_include_output = zone_include_template.render(zones=data)
+    with open('./output/' + zone["zone"] + ".conf_include", 'w') as f:
+        f.write(zone_include_output)
+    backend.transfertIncludeFile([ 'ns1.webfutur.com', 'ns2.webfutur.com' ] , './output/' + zone["zone"] + ".conf_include")
     #ReloadDNS('ns1.webfutur.com')
     #ReloadDNS('ns2.webfutur.com')
     return True

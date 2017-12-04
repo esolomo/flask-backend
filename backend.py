@@ -12,6 +12,21 @@ env.key_filename=['/Users/solomo/.ssh/id_rsa']
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+def transfertIncludeFile(servers,filename):
+    print("Sending  includes file to master and slave  server")
+    for server in servers:
+        env.host_string = server
+        with hide('everything'), settings(warn_only=True):    
+            result = put(filename ,"/etc/bind/named.conf.webfuturadmin",use_sudo=True)
+    print result
+
+def transfertConfFile(server,filename,conf_name):
+    print("Sending  config file  to " + server )
+    env.host_string = server
+    with hide('everything'), settings(warn_only=True):    
+        result = put(filename ,"/etc/bind/named.conf.d.webfuturadmin/" +  conf_name,use_sudo=True)
+    print result
+
 def transfertFileToDNS(server,filename):
     print("Sending file to primary dns server")
     env.host_string = server
@@ -36,6 +51,8 @@ def list_users2(server):
 
 def list_users(server):
     env.host_string = server
+    env.timeout = 20
+    env.connection_attempts = 3
     ftp_user_list=[]
     try:
         with hide('everything'), settings(warn_only=True):
