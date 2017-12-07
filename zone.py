@@ -229,6 +229,7 @@ def config_apply(data,username):
     zone_file_output = zone_template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records)
     with open('./output/' + zone["zone_file"], 'w') as f:
         f.write(zone_file_output)
+    backend.transfertZoneFile('ns1.webfutur.com', zone["zone_file"])
     managed_domains = zone['managed_zones']
     managed_domains.append(zone["main_zone"])
     #process = subprocess.Popen(["nslookup", ns[0]  ], stdout=subprocess.PIPE)

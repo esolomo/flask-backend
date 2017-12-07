@@ -12,6 +12,15 @@ env.key_filename=['/Users/solomo/.ssh/id_rsa']
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
+
+def transfertZoneFile(server,zonefile):
+    print("Sending  includes file to master and slave  server")
+    env.host_string = server
+    with hide('everything'), settings(warn_only=True):    
+        result = put('./output/' + zonefile , '/tmp/' + zonefile,use_sudo=True)
+    print result
+
+
 def transfertIncludeFile(servers,filename):
     print("Sending  includes file to master and slave  server")
     for server in servers:
