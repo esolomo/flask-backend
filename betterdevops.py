@@ -183,7 +183,77 @@ def deploy_config():
     Zone.config_deploy("mahny@mahny.com")
     return jsonify(status="Success")
 
+###
+### Gestion des Settings SSH 
+###
 
+@app.route('/api/settings/ssh', methods=['DELETE'])
+def remove_ssh_id():
+    #settings = backend.Settings(session['username'])
+    settings = backend.Settings('mahny@mahny.com')
+    name = request.args.get('name')
+    print(name)
+    if isinstance(name, unicode):
+        print("No name argument to request , requesting all keys ")
+        data = settings.remove_user_id(name)
+        return jsonify(status="Success", message="Sucessfully remove user_id :" + name)
+    return jsonify(status="Error")
+
+
+@app.route('/api/settings/ssh', methods=['GET'])
+def get_ssh_id():
+    #settings = backend.Settings(session['username'])
+    settings = backend.Settings('mahny@mahny.com')
+    name = request.args.get('name')
+    if not isinstance(name, unicode):
+        print("No name argument to request , requesting all keys ")
+        data = settings.get_user_id(False)
+        return jsonify(status="Success", results=data)
+    data = settings.get_user_id(name)
+    return jsonify(status="Success", results=data)
+
+@app.route('/api/settings/ssh', methods=['PUT'])
+def update_ssh_id():
+    #settings = backend.Settings(session['username'])
+    print(request.json)
+    if 'name' in request.json:
+        settings = backend.Settings('mahny@mahny.com')
+        data = settings.update_user_id(request.json)
+        return jsonify(status="Success", message="update successfull for :" + request.json['name'])
+    return jsonify(status="Error", message="name required")
+
+@app.route('/api/settings/ssh', methods=['POST'])
+def create_ssh_id():
+    #settings = backend.Settings(session['username'])
+    print(request.json)
+    if 'name' in request.json:
+        settings = backend.Settings('mahny@mahny.com')
+        data = settings.create_user_id(request.json)
+        return jsonify(status="Success", results=data)
+    return jsonify(status="Error", results=[])
+
+###
+### Gestion des Settings DNS 
+###
+
+@app.route('/api/settings/dns', methods=['POST'])
+def set_dns_settings():
+    #settings = backend.Settings(session['username'])
+    settings = backend.Settings('mahny@mahny.com')
+    print("Settings DNS Settings")
+    print(request.json)
+    data = settings.set_dns_settings(request.json['type'], request.json['value'])
+    return jsonify(status="Success", results=data)
+
+@app.route('/api/settings/dns', methods=['GET'])
+def get_dns_settings():
+    #settings = backend.Settings(session['username'])
+    dns = backend.DNS('mahny@mahny.com').set_settings()
+    settings = backend.Settings('mahny@mahny.com')
+    data = settings.get_dns_settings()
+    print("Retrieving Data for ssh key")
+    print(data)
+    return jsonify(status="Success", results=data)
 
 if __name__ == '__main__':
     app.secret_key = 'mysecret'

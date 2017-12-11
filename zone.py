@@ -155,10 +155,7 @@ def remove(args,username):
 ###
 
 def create(data,username):
-    #print(data)
-    #owner = session['username']
     owner = username
-    #customer = data["customer"]
     customer = 'TargetWeb'
     dns = mongo.db.dns_zone
     zone = mongo.db.zone
@@ -168,11 +165,9 @@ def create(data,username):
     serial = arrow.now().format('YYYYMMDDSS')
     zone_file=data["name"]+".zone"
     managed_zones=[]
-    #managed_zones.append(data["name"])
     zone.insert(dict(owner=owner,organisation=organisation,customer=customer,managed_zones=managed_zones,main_zone=data["name"],zone_file=zone_file))
     dns.insert(dict(SOA=["ns1.webfutur.com", "sysadmin.webfutur.net"],NS=["ns1.webfutur.com", "ns2.webfutur.com"],managed_zones=managed_zones,customer=customer,main_zone=data["name"],zone_file=zone_file,owner=owner,organisation=organisation,zone=data["name"],ROOT_IPv4=[],ROOT_IPv6=[],TTL=dict(base=300),MX=[],A=[],AAAA=[],CNAME=[],TXT=[],SRV=[]))
     return jsonify(status="Success")
-    #return jsonify(status="Error ", message="Insertion failed")
 
 
 ###
@@ -180,8 +175,10 @@ def create(data,username):
 ###
 
 def config_apply(data,username):
+    dns = backend.DNS(username)
     zones = mongo.db.dns_zone
     zone  = zones.find_one({"owner":username, "zone":data["zone"]})
+    dns.set_user_id()
     del zone['_id']
     templateLoader = jinja2.FileSystemLoader( searchpath="./templates/")
     templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True )
@@ -229,15 +226,10 @@ def config_apply(data,username):
     zone_file_output = zone_template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records)
     with open('./output/' + zone["zone_file"], 'w') as f:
         f.write(zone_file_output)
-    backend.transfertZoneFile('ns1.webfutur.com', zone["zone_file"])
+    #backend.transfertZoneFile('ns1.webfutur.com', zone["zone_file"])
+    dns.transfertZoneFile(zone["zone_file"])
     managed_domains = zone['managed_zones']
     managed_domains.append(zone["main_zone"])
-    #process = subprocess.Popen(["nslookup", ns[0]  ], stdout=subprocess.PIPE)
-    #process = subprocess.Popen(["nslookup", "-query=AAAA", ns[0] ], stdout=subprocess.PIPE)
-    ##ns1_ipv4 = process.communicate()[0].split('\n')
-    #ns1_ipv6 = process.communicate()[0].split('\n')
-    #ns1_ipv4_tmp = ns1_ipv4[6].split()
-    #ns1_ipv6_tmp = ns1_ipv6[5].split()
     ns_server_ipv4 = '91.121.59.230'
     ns_server_ipv6 = '2001:41d0:d:35e2::163'
     conf_master_output = conf_master_template.render(managed_domains=managed_domains, zone_file=zone['zone_file'])
@@ -246,11 +238,10 @@ def config_apply(data,username):
         f.write(conf_master_output)
     with open('./output/' + zone["zone"] + ".conf_slave", 'w') as f:
         f.write(conf_slave_output)
-    backend.transfertConfFile('ns1.webfutur.com', './output/' + zone["zone"] + ".conf_master", zone["zone"] + ".conf")
-    backend.transfertConfFile('ns2.webfutur.com', './output/' + zone["zone"] + ".conf_slave", zone["zone"] + ".conf")
-    #backend.transfertFileToDNS(ns1.webfutur.com, './output/' + data["zone"] + ".zone")
-    #ReloadDNS('ns1.webfutur.com')
-    #ReloadDNS('ns2.webfutur.com')
+    #backend.transfertConfFile('ns1.webfutur.com', './output/' + zone["zone"] + ".conf_master", zone["zone"] + ".conf")
+    #backend.transfertConfFile('ns2.webfutur.com', './output/' + zone["zone"] + ".conf_slave", zone["zone"] + ".conf")
+    dns.transfertConfFile('./output/' + zone["zone"] , zone["zone"] + ".conf")
+    #dns.transfertConfFile('ns2.webfutur.com', './output/' + zone["zone"] + ".conf_slave", zone["zone"] + ".conf")
     return True
 
 ###
@@ -258,7 +249,8 @@ def config_apply(data,username):
 ###
 
 def config_deploy(username):
-
+    dns = backend.DNS(username)
+    dns.set_user_id()
     zones = mongo.db.dns_zone
     all_zones  = zones.find({"owner":username})
     data = []
@@ -267,15 +259,14 @@ def config_deploy(username):
         data.append(zone)
         todeploy = { 'zone':zone['zone'] }
         config_apply(todeploy,username)
-
     templateLoader = jinja2.FileSystemLoader( searchpath="./templates/")
     templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True )
     ZONE_INCLUDE_TEMPLATE_FILE = "zone_include.tpl"
     zone_include_template = templateEnv.get_template(ZONE_INCLUDE_TEMPLATE_FILE)
-    zone_include_output = zone_include_template.render(zones=data)
+    zone_include_output = zone_include_template.render(zones=data,config_dir=dns.bind_config_dir)
     with open('./output/' + zone["zone"] + ".conf_include", 'w') as f:
         f.write(zone_include_output)
-    backend.transfertIncludeFile([ 'ns1.webfutur.com', 'ns2.webfutur.com' ] , './output/' + zone["zone"] + ".conf_include")
+    dns.transfertIncludeFile( './output/' + zone["zone"] + ".conf_include")
     #ReloadDNS('ns1.webfutur.com')
     #ReloadDNS('ns2.webfutur.com')
     return True
