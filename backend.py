@@ -55,7 +55,27 @@ class Settings:
         db = self.client.betterdevops
         login_user = db.users.find_one({'name' : self.username})
         login_user['dns_settings' ]['ssh_key']  = login_user['dns_user_id' ]['name']
-        return(login_user['dns_settings' ])             
+        return(login_user['dns_settings' ])  
+
+    def get_ftp_settings(self):
+        print("Settings DNS SSH Config for user_id")
+        db = self.client.betterdevops
+        login_user = db.users.find_one({'name' : self.username})
+        return(login_user['ftp_settings' ])
+
+    def set_ftp_settings(self, value):
+        print("Settings FTP SSH Config for user_id")
+        db = self.client.betterdevops
+        login_user = db.users.find_one({'name' : self.username})
+        ftp_settings = login_user['ftp_settings']
+        for entry in login_user['user_id']:
+            if entry['name'] == value:
+                ftp_settings['ssh_key_name'] = value
+                ftp_settings['ssh_user'] = entry['ssh_user']
+                ftp_settings['ssh_key'] = entry['ssh_key']
+                db.users.update({'name' : self.username},{'$set':{  'ftp_settings' : ftp_settings  } })
+        return(dict(status='Success'))  
+
 
     def set_ftp_user_id(self, name):
         db = self.client.betterdevops
@@ -182,7 +202,7 @@ class DNS:
         env.user = self.ssh_user
         env.key = self.ssh_key 
         env.host_string =  self.primary_dns
-        print("#################  Zone files dir :  " + self.bind_zone_file_dir)
+        print("Zone files dir :  " + self.bind_zone_file_dir)
         with hide('everything'), settings(warn_only=True):    
             result = put('./output/' + zonefile , self.bind_zone_file_dir + '/' +  zonefile,use_sudo=True)
         print result
@@ -229,24 +249,69 @@ class DNS:
 
 
 class FTP:
-    def __init__(self):
-        self.user = "admin"
+    def __init__(self,username):
+        self.client = MongoClient('mongodb://localhost:27017/')
+        self.db = self.client.betterdevops
+        self.username = username
+        self.ssh_user = "admin"
         self.key_filename= ['/Users/solomo/.ssh/id_rsa']
+        self.set_settings()
+
+    def set_settings(self):
+        login_user = self.db.users.find_one({'name' : self.username})
+        if 'ftp_settings'  in login_user:
+            ftp_settings = login_user['ftp_settings']
+            if 'ssh_key_name' in ftp_settings:
+                self.ssh_user = login_user['ftp_settings']['ssh_key_name']
+            else:
+                ftp_settings['ssh_key_name'] = "admin"
+                self.db.users.update({'name' : self.username},{'$set': {  'ftp_settings' : ftp_settings } })
+            if 'ssh_user' in ftp_settings:
+                self.ssh_user = login_user['ftp_settings']['ssh_user']
+            else:
+                ftp_settings['ssh_user'] = "admin"
+                self.db.users.update({'name' : self.username},{'$set': {  'ftp_settings' : ftp_settings } })
+            if 'ssh_key' in ftp_settings:
+                self.ssh_key = login_user['ftp_settings']['ssh_key']
+            else:
+                ftp_settings['ssh_key'] = ""
+                self.db.users.update({'name' : self.username},{'$set': {  'ftp_settings' : ftp_settings } })
+        else:
+            ftp_settings = dict(ssh_user="admin",ssh_key="",ssh_key_name="default")
+            self.db.users.update({'name' : self.username},{'$set': {  'ftp_settings' : ftp_settings } })
+            self.ssh_key_name = "default"
+            self.ssh_user = "admin"
+            self.ssh_key = ""
 
     def get_user_id(self):
         self.user = "admin"
         self.key_filename= ['/Users/solomo/.ssh/id_rsa']
 
+    def list_users(self, server):
+        ftp_users = self.db.ftp_users.find({'owner' : self.username,'domain':server})
+        results = []
+        for user in  ftp_users:
+            del user['_id']
+            results.append(user)
+        print(results)
+        return results
+
     def list_users2(self, server):
         env.host_string = server
+        env.user = self.ssh_user
+        #env.key = self.ssh_key
+        env.key_filename = ['/Users/solomo/.ssh/id_rsa']
         with hide('everything'), settings(warn_only=True):    
             result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
         print result
 
-    def list_users(self,server):
+    def list_users3(self,server):
         env.host_string = server
         env.timeout = 20
         env.connection_attempts = 3
+        env.user = self.ssh_user
+        #env.key = self.ssh_key
+        env.key_filename = self.key_filename
         ftp_user_list=[]
         try:
             with hide('everything'), settings(warn_only=True):
@@ -259,21 +324,37 @@ class FTP:
         return ftp_user_list
                     
     def UpdateUserDatadir(self, server,username, datadir):
+        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'homedir' : datadir } })
+        return True 
+
+    def UpdateUserDatadir2(self, server,username, datadir):
         env.host_string = server    
         cmd = "usermod -d "+ datadir  + " " +  username
         return  sudo(cmd)
 
     def UpdateUserPwd(self, server,username, password):
+        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'password' : password } })
+        return True 
+
+    def UpdateUserPwd2(self, server,username, password):
         env.host_string = server    
         encPass = crypt.crypt(password,"22")
         cmd = "usermod -p "+encPass + " " + username
         return  sudo(cmd)
 
     def RemoveUser(self, server,username):
+        self.db.ftp_users.remove({'owner' : self.username,'domain':server, 'username' : username})
+        return True
+
+    def RemoveUser2(self, server,username):
         env.host_string = server    
         return  sudo("userdel " + username)
 
     def createUser(self, server,username,password,datadir):
+        ftp_users = self.db.ftp_users.insert({'owner' : self.username,'domain':server, 'username' : username, 'homedir':datadir, 'password' : password })
+        return True       
+
+    def createUser2(self, server,username,password,datadir):
         env.host_string = server    
         encPass = crypt.crypt(password,"22")
         cmd = "useradd -p "+encPass+ "-G ftponly  -s "+ "/bin/false "+ "-d "+ datadir + " -c \" FTP user "+ username +"\" " + username

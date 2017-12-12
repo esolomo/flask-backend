@@ -22,60 +22,60 @@ mongo = PyMongo(app)
 ### Update FTP user methods
 ###
 
-def add_user(data):
+def add_user(owner, data):
     """Add user to FTP domain"""
     print("Adding ftp user")
-    backend.createUser(data['domain'], data['username'], data['password'], data['datadir'])
+    backend.FTP(owner).createUser(data['domain'], data['username'], data['password'], data['datadir'])
     return True
 
-def remove_user(domain, username):
+def remove_user(owner,domain, username):
     """Remove FTP user"""
-    backend.RemoveUser(domain, username)
+    backend.FTP(owner).RemoveUser(domain, username)
     return True
 
-def update_password(data):
+def update_password(owner, data):
     """Update password for FTP user"""
-    backend.UpdateUserPwd(data['ftpsite'], data['username'], data['password'])
+    backend.FTP(owner).UpdateUserPwd(data['ftpsite'], data['username'], data['password'])
     return True
 
-def update_datadir(data):
+def update_datadir(owner, data):
     """Update datadir for FTP user """
-    backend.UpdateUserDatadir(data['ftpsite'], data['username'], data['datadir'])
+    backend.FTP(owner).UpdateUserDatadir(data['ftpsite'], data['username'], data['datadir'])
     return True
 
 ###
 ### Update FTP user methods
 ###
 
-def get(domain):
+def get(owner, domain):
     """Return FTP domain data """
-    data = backend.list_users(domain)
+    data = backend.FTP(owner).list_users(domain)
     return data
 
-def remove_domain(domain,username):
+def remove_domain(domain,owner):
     """Return FTP domain"""
     domains = mongo.db.domains
-    data = domains.find_one({"name":domain, "owner":username})
+    data = domains.find_one({"name":domain, "owner":owner})
     if data:
-        domains.remove({"name":domain, "owner":username})
+        domains.remove({"name":domain, "owner":owner})
         return True
     return False
 
 
-def get_domains(username):
+def get_domains(owner):
     """Return FTP domain"""
     domains = mongo.db.domains
     domain_list = []
-    for domain in domains.find({"owner":username}):
+    for domain in domains.find({"owner":owner}):
         alias = domain['alias'] if 'alias' in domain.keys()  else 'undefined'
         data = dict(name=domain['name'], alias=alias, owner=domain['owner'])
         domain_list.append(data)
     return domain_list
 
-def add_domain(name,username, alias):
+def add_domain(name,owner, alias):
     """Add FTP domain"""
     domains = mongo.db.domains
-    domains.insert({"name":name, "owner":username, "alias":alias})
+    domains.insert({"name":name, "owner":owner, "alias":alias})
     return True
 
 

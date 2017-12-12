@@ -48,8 +48,6 @@ def logout():
 @app.route('/api/logout', methods=['GET', 'POST'])
 def api_logout():
         # remove the username from the session if it's there
-        print("Logging out")
-        print(session['username'])
         session.pop('username', None)
         return jsonify(status="Success")
 
@@ -57,10 +55,8 @@ def api_logout():
 def api_login():
     users = mongo.db.users
     data = request.get_data()
-    print(data) 
     user = ast.literal_eval(data)['username']
-    password = ast.literal_eval(data)['password']
-    print(password)     
+    password = ast.literal_eval(data)['password']    
     login_user = users.find_one({'name' : ast.literal_eval(data)['username']})
     if login_user:
         if bcrypt.hashpw(ast.literal_eval(data)['password'].encode('utf-8'), login_user['password'].encode('utf-8')) == login_user['password'].encode('utf-8'):
@@ -95,30 +91,28 @@ def api_register():
 def get_site():
     if request.json['site']:
         if 'username' in session:
-            data = ftp.get(request.json['site'])
+            data = ftp.get(session['username'],request.json['site'])
             return jsonify(status="Sucess", message="FTP User list", results=data)
         return jsonify(status="Error", message="Please login", results=[])
 
 @app.route('/api/ftp/user', methods=['POST'])
 def ftp_user_add():
-    ftp.add_user(request.json)
+    ftp.add_user(session['username'], request.json)
     return jsonify(status="Success")
 
 @app.route('/api/ftp/user', methods=['DELETE'])
 def ftp_remove_user():
-    ftp.remove_user(request.args.get("ftpsite"), request.args.get("username"))
+    ftp.remove_user(session['username'], request.args.get("ftpsite"), request.args.get("username"))
     return jsonify(status="Success", message="FTP user have been removed")
 
 @app.route('/api/ftp/password', methods=['PUT'])
 def ftp_update_password():
-    print(request.json)
-    ftp.update_password(request.json)
+    ftp.update_password(session['username'], request.json)
     return jsonify(status="Success", message="Updated password")
 
 @app.route('/api/ftp/datadir', methods=['PUT'])
 def ftp_update_datadir():
-    print(request.json)
-    ftp.update_datadir(request.json)
+    ftp.update_datadir(session['username'], request.json)
     return jsonify(status="Success", message="Updated datadir")
 
 @app.route('/api/domain', methods=['POST'])
@@ -159,7 +153,6 @@ def add_dns_records():
 
 @app.route('/api/dns', methods=['DELETE'])
 def delete_dns():
-    print("Removing DNS zone")
     Zone.remove(request.args, session['username'])
     return jsonify(status="Success")
 
@@ -178,7 +171,6 @@ def apply_zone_config():
 
 @app.route('/api/deploy/dns', methods=['POST'])
 def deploy_config():
-    print("Deployinh Config")
     #Zone.config_deploy(session['username'])
     Zone.config_deploy("mahny@mahny.com")
     return jsonify(status="Success")
@@ -192,7 +184,6 @@ def remove_ssh_id():
     #settings = backend.Settings(session['username'])
     settings = backend.Settings('mahny@mahny.com')
     name = request.args.get('name')
-    print(name)
     if isinstance(name, unicode):
         print("No name argument to request , requesting all keys ")
         data = settings.remove_user_id(name)
@@ -215,7 +206,6 @@ def get_ssh_id():
 @app.route('/api/settings/ssh', methods=['PUT'])
 def update_ssh_id():
     #settings = backend.Settings(session['username'])
-    print(request.json)
     if 'name' in request.json:
         settings = backend.Settings('mahny@mahny.com')
         data = settings.update_user_id(request.json)
@@ -224,8 +214,6 @@ def update_ssh_id():
 
 @app.route('/api/settings/ssh', methods=['POST'])
 def create_ssh_id():
-    #settings = backend.Settings(session['username'])
-    print(request.json)
     if 'name' in request.json:
         settings = backend.Settings('mahny@mahny.com')
         data = settings.create_user_id(request.json)
@@ -240,8 +228,6 @@ def create_ssh_id():
 def set_dns_settings():
     #settings = backend.Settings(session['username'])
     settings = backend.Settings('mahny@mahny.com')
-    print("Settings DNS Settings")
-    print(request.json)
     data = settings.set_dns_settings(request.json['type'], request.json['value'])
     return jsonify(status="Success", results=data)
 
@@ -251,8 +237,25 @@ def get_dns_settings():
     dns = backend.DNS('mahny@mahny.com').set_settings()
     settings = backend.Settings('mahny@mahny.com')
     data = settings.get_dns_settings()
-    print("Retrieving Data for ssh key")
-    print(data)
+    return jsonify(status="Success", results=data)
+
+###
+### Gestion des Settings FTP 
+###
+
+@app.route('/api/settings/ftp', methods=['POST'])
+def set_ftp_settings():
+    #settings = backend.Settings(session['username'])
+    settings = backend.Settings('mahny@mahny.com')
+    data = settings.set_ftp_settings(request.json['value'])
+    return jsonify(status="Success", results=data)
+
+@app.route('/api/settings/ftp', methods=['GET'])
+def get_ftp_settings():
+    #settings = backend.Settings(session['username'])
+    ftp = backend.FTP('mahny@mahny.com').set_settings()
+    settings = backend.Settings('mahny@mahny.com')
+    data = settings.get_ftp_settings()
     return jsonify(status="Success", results=data)
 
 if __name__ == '__main__':
