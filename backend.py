@@ -37,7 +37,7 @@ class Settings:
         return(dict(status='Success')) 
 
     def set_dns_settings(self, type, value):
-        print("Settings DNS SSH Config for user_id")
+        print("Settings DNS SSH Config for user : " + self.username)
         db = self.client.betterdevops
         login_user = db.users.find_one({'name' : self.username})
         dns_settings = login_user['dns_settings']
@@ -51,20 +51,20 @@ class Settings:
         return(dict(status='Success'))  
 
     def get_dns_settings(self):
-        print("Settings DNS SSH Config for user_id")
+        print("Gettings DNS SSH Config for user : " + self.username)
         db = self.client.betterdevops
         login_user = db.users.find_one({'name' : self.username})
         login_user['dns_settings' ]['ssh_key']  = login_user['dns_user_id' ]['name']
         return(login_user['dns_settings' ])  
 
     def get_ftp_settings(self):
-        print("Settings DNS SSH Config for user_id")
+        print("Gettings FTP SSH Config for user : " + self.username)
         db = self.client.betterdevops
         login_user = db.users.find_one({'name' : self.username})
         return(login_user['ftp_settings' ])
 
     def set_ftp_settings(self, value):
-        print("Settings FTP SSH Config for user_id")
+        print("Settings FTP SSH Config for user : " + self.username)
         db = self.client.betterdevops
         login_user = db.users.find_one({'name' : self.username})
         ftp_settings = login_user['ftp_settings']
@@ -74,7 +74,8 @@ class Settings:
                 ftp_settings['ssh_user'] = entry['ssh_user']
                 ftp_settings['ssh_key'] = entry['ssh_key']
                 db.users.update({'name' : self.username},{'$set':{  'ftp_settings' : ftp_settings  } })
-        return(dict(status='Success'))  
+                return(dict(status='Success'))
+        return(dict(status='Failure', message="No such key : " + value)) 
 
 
     def set_ftp_user_id(self, name):
@@ -262,7 +263,7 @@ class FTP:
         if 'ftp_settings'  in login_user:
             ftp_settings = login_user['ftp_settings']
             if 'ssh_key_name' in ftp_settings:
-                self.ssh_user = login_user['ftp_settings']['ssh_key_name']
+                self.ssh_key_name = login_user['ftp_settings']['ssh_key_name']
             else:
                 ftp_settings['ssh_key_name'] = "admin"
                 self.db.users.update({'name' : self.username},{'$set': {  'ftp_settings' : ftp_settings } })
@@ -293,69 +294,59 @@ class FTP:
         for user in  ftp_users:
             del user['_id']
             results.append(user)
-        print(results)
         return results
-
-    def list_users2(self, server):
-        env.host_string = server
-        env.user = self.ssh_user
-        #env.key = self.ssh_key
-        env.key_filename = ['/Users/solomo/.ssh/id_rsa']
-        with hide('everything'), settings(warn_only=True):    
-            result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
-        print result
-
-    def list_users3(self,server):
-        env.host_string = server
+                    
+    def UpdateUserDatadir(self, server,username, datadir):
         env.timeout = 20
         env.connection_attempts = 3
         env.user = self.ssh_user
-        #env.key = self.ssh_key
-        env.key_filename = self.key_filename
-        ftp_user_list=[]
-        try:
-            with hide('everything'), settings(warn_only=True):
-                result = run('cat /etc/passwd | grep ftp | awk -F \':\' \'{print $1 " " $6}\'')
-        except NetworkError as e:
-            print(e.message)
-            return ftp_user_list             
-        for ftpdata in result.stdout.split('\n'):
-            ftp_user_list.append(dict(servername=server,username=ftpdata.split(" ")[0].strip(),homedir=ftpdata.split(" ")[1].strip()))
-        return ftp_user_list
-                    
-    def UpdateUserDatadir(self, server,username, datadir):
-        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'homedir' : datadir } })
-        return True 
-
-    def UpdateUserDatadir2(self, server,username, datadir):
-        env.host_string = server    
+        env.key = self.ssh_key
+        env.host_string = server
         cmd = "usermod -d "+ datadir  + " " +  username
-        return  sudo(cmd)
+        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'homedir' : datadir } })
+        with hide('everything'), settings(warn_only=True):
+            result =  sudo(cmd)
+        return dict(return_code=result.return_code,action="update_datadir") 
 
     def UpdateUserPwd(self, server,username, password):
-        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'password' : password } })
-        return True 
-
-    def UpdateUserPwd2(self, server,username, password):
-        env.host_string = server    
+        env.timeout = 20
+        env.connection_attempts = 3
+        env.user = self.ssh_user
+        env.key = self.ssh_key
+        env.host_string = server
         encPass = crypt.crypt(password,"22")
+        self.db.ftp_users.update({'owner' : self.username,'domain':server, 'username' : username}, { '$set' : { 'password' : password } })
         cmd = "usermod -p "+encPass + " " + username
-        return  sudo(cmd)
+        with hide('everything'), settings(warn_only=True):
+            result =  sudo(cmd)
+        return dict(return_code=result.return_code,action="update_pwd") 
 
     def RemoveUser(self, server,username):
+        env.timeout = 20
+        env.connection_attempts = 3
+        env.user = self.ssh_user
+        env.key = self.ssh_key
+        env.host_string = server
         self.db.ftp_users.remove({'owner' : self.username,'domain':server, 'username' : username})
-        return True
-
-    def RemoveUser2(self, server,username):
-        env.host_string = server    
-        return  sudo("userdel " + username)
+        with hide('everything'), settings(warn_only=True):    
+            result = sudo("userdel " + username) 
+        return dict(return_code=result.return_code,action="remove_user")
 
     def createUser(self, server,username,password,datadir):
-        ftp_users = self.db.ftp_users.insert({'owner' : self.username,'domain':server, 'username' : username, 'homedir':datadir, 'password' : password })
-        return True       
-
-    def createUser2(self, server,username,password,datadir):
-        env.host_string = server    
+        env.timeout = 20
+        env.connection_attempts = 3
+        env.user = self.ssh_user
+        env.key = self.ssh_key
+        env.host_string = server
         encPass = crypt.crypt(password,"22")
+        self.db.ftp_users.insert({'owner' : self.username,'domain':server, 'username' : username, 'homedir':datadir, 'password' : password })
+        print("Now creating user with the following credentials on remote system : " )
         cmd = "useradd -p "+encPass+ "-G ftponly  -s "+ "/bin/false "+ "-d "+ datadir + " -c \" FTP user "+ username +"\" " + username
-        return sudo("useradd -p "+encPass+ " -s "+ "/bin/false "+ "-d "+ datadir + " -c \" FTP user "+ username +"\" " + username)
+        with hide('everything'), settings(warn_only=True):    
+            test_id_result = sudo("id  " + username)
+            print("Return Code : " + str(test_id_result.return_code))
+            if test_id_result == 1:
+                result = sudo("useradd -p "+encPass+ " -s "+ "/bin/false "+ "-d "+ datadir + " -c \" FTP user "+ username +"\" " + username)
+                return dict(return_code=result.return_code,action="create_user")
+        return dict(return_code=test_id_result.return_code,action="test_if_user_exist")      
+

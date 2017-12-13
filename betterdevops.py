@@ -23,31 +23,18 @@ mongo = PyMongo(app)
 @app.route('/api/session')
 def check_session():
     if 'username' in session:
-        #return 'You are logged in as ' + session['username']
         return  jsonify(status=True)       
-        #return render_template('dashboard.html', username=session['username'])
-
     return jsonify(status=False)  
 
-@app.route('/')
-def index():
-    if 'username' in session:
-        #return 'You are logged in as ' + session['username']
-        return redirect(url_for('ftp_mgnt'))        
-        #return render_template('dashboard.html', username=session['username'])
-
-    return render_template('index.html')
 
 
 @app.route('/logout')
 def logout():
-        # remove the username from the session if it's there
         session.pop('username', None)
         return redirect(url_for('index'))
 
 @app.route('/api/logout', methods=['GET', 'POST'])
 def api_logout():
-        # remove the username from the session if it's there
         session.pop('username', None)
         return jsonify(status="Success")
 
@@ -171,8 +158,7 @@ def apply_zone_config():
 
 @app.route('/api/deploy/dns', methods=['POST'])
 def deploy_config():
-    #Zone.config_deploy(session['username'])
-    Zone.config_deploy("mahny@mahny.com")
+    Zone.config_deploy(session['username'])
     return jsonify(status="Success")
 
 ###
@@ -181,8 +167,7 @@ def deploy_config():
 
 @app.route('/api/settings/ssh', methods=['DELETE'])
 def remove_ssh_id():
-    #settings = backend.Settings(session['username'])
-    settings = backend.Settings('mahny@mahny.com')
+    settings = backend.Settings(session['username'])
     name = request.args.get('name')
     if isinstance(name, unicode):
         print("No name argument to request , requesting all keys ")
@@ -193,8 +178,7 @@ def remove_ssh_id():
 
 @app.route('/api/settings/ssh', methods=['GET'])
 def get_ssh_id():
-    #settings = backend.Settings(session['username'])
-    settings = backend.Settings('mahny@mahny.com')
+    settings = backend.Settings(session['username'])
     name = request.args.get('name')
     if not isinstance(name, unicode):
         print("No name argument to request , requesting all keys ")
@@ -205,9 +189,8 @@ def get_ssh_id():
 
 @app.route('/api/settings/ssh', methods=['PUT'])
 def update_ssh_id():
-    #settings = backend.Settings(session['username'])
     if 'name' in request.json:
-        settings = backend.Settings('mahny@mahny.com')
+        settings = backend.Settings(session['username'])
         data = settings.update_user_id(request.json)
         return jsonify(status="Success", message="update successfull for :" + request.json['name'])
     return jsonify(status="Error", message="name required")
@@ -215,7 +198,7 @@ def update_ssh_id():
 @app.route('/api/settings/ssh', methods=['POST'])
 def create_ssh_id():
     if 'name' in request.json:
-        settings = backend.Settings('mahny@mahny.com')
+        settings = backend.Settings(session['username'])
         data = settings.create_user_id(request.json)
         return jsonify(status="Success", results=data)
     return jsonify(status="Error", results=[])
@@ -226,16 +209,14 @@ def create_ssh_id():
 
 @app.route('/api/settings/dns', methods=['POST'])
 def set_dns_settings():
-    #settings = backend.Settings(session['username'])
-    settings = backend.Settings('mahny@mahny.com')
+    settings = backend.Settings(session['username'])
     data = settings.set_dns_settings(request.json['type'], request.json['value'])
     return jsonify(status="Success", results=data)
 
 @app.route('/api/settings/dns', methods=['GET'])
 def get_dns_settings():
-    #settings = backend.Settings(session['username'])
-    dns = backend.DNS('mahny@mahny.com').set_settings()
-    settings = backend.Settings('mahny@mahny.com')
+    dns = backend.DNS(session['username']).set_settings()
+    settings = backend.Settings(session['username'])
     data = settings.get_dns_settings()
     return jsonify(status="Success", results=data)
 
@@ -245,16 +226,14 @@ def get_dns_settings():
 
 @app.route('/api/settings/ftp', methods=['POST'])
 def set_ftp_settings():
-    #settings = backend.Settings(session['username'])
-    settings = backend.Settings('mahny@mahny.com')
+    settings = backend.Settings(session['username'])
     data = settings.set_ftp_settings(request.json['value'])
     return jsonify(status="Success", results=data)
 
 @app.route('/api/settings/ftp', methods=['GET'])
 def get_ftp_settings():
-    #settings = backend.Settings(session['username'])
-    ftp = backend.FTP('mahny@mahny.com').set_settings()
-    settings = backend.Settings('mahny@mahny.com')
+    ftp = backend.FTP(session['username']).set_settings()
+    settings = backend.Settings(session['username'])
     data = settings.get_ftp_settings()
     return jsonify(status="Success", results=data)
 
