@@ -345,7 +345,7 @@ class FTP:
         with hide('everything'), settings(warn_only=True):    
             test_id_result = sudo("id  " + username)
             print("Return Code : " + str(test_id_result.return_code))
-            if test_id_result == 1:
+            if test_id_result.return_code == 1:
                 result = sudo("useradd -p "+encPass+ " -s "+ "/bin/false "+ "-d "+ datadir + " -c \" FTP user "+ username +"\" " + username)
                 return dict(return_code=result.return_code,action="create_user")
         return dict(return_code=test_id_result.return_code,action="test_if_user_exist")      
