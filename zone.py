@@ -79,8 +79,13 @@ def update(data, username):
         zone.update_one({"owner":owner, "zone":data["zone"]}, { "$set": { "TXT": record['TXT'] } })
     elif data['type'] == 'SRV':
         print("TYPE SRV request")
-        record['SRV'].append(dict(name=data['name'],ttl=ttl,destination=data['destination']))
+        print(ttl)
+        record['SRV'].append(dict(target=data['target'],ttl=ttl,port=data['port'],weight=data['weight'],priority=data['priority'],protocol=data['protocol']))
         zone.update_one({"owner":owner, "zone":data["zone"]}, { "$set": { "SRV": record['SRV'] } })
+    elif data['type'] == 'SPF':
+        print("TYPE SPF request")
+        record['SPF'].append(dict(name=data['name'],ttl=ttl,entry=data['entry']))
+        zone.update_one({"owner":owner, "zone":data["zone"]}, { "$set": { "SPF": record['SPF'] } })
     elif data['type'] == 'SOA':
         print("TYPE SOA request")
         record['SOA'].append(dict(name=data['name'],destination=data['destination']))
@@ -127,13 +132,26 @@ def remove(args,username):
                     for record in records[type]:
                         if not (name == record['name'] and destination == record['destination']):
                             update_data.append(record)
-                elif type == 'MX' or type == 'SRV':
+                elif type == 'MX':
                     priority = args.get("priority")
                     for record in records[type]:
-                        print(record)
                         if not (name == record['name'] ):
                             update_data.append(record)
                 elif type == 'TXT':
+                    entry = args.get("entry")
+                    for record in records[type]:
+                        if not (name == record['name'] and entry == record['entry']):
+                            update_data.append(record)
+                elif type == 'SRV':
+                    target = args.get("target")
+                    port = args.get("port")
+                    weight = args.get("weight")
+                    priority = args.get("priority")
+                    protocol = args.get("protocol")
+                    for record in records[type]:
+                        if not (target == record['target'] and port == record['port'] and  weight == record['weight'] and priority == record['priority'] and protocol == record['protocol'] ):
+                            update_data.append(record)
+                elif type == 'SPF':
                     entry = args.get("entry")
                     for record in records[type]:
                         if not (name == record['name'] and entry == record['entry']):
@@ -166,7 +184,7 @@ def create(data,username):
     zone_file=data["name"]+".zone"
     managed_zones=[]
     zone.insert(dict(owner=owner,organisation=organisation,customer=customer,managed_zones=managed_zones,main_zone=data["name"],zone_file=zone_file))
-    dns.insert(dict(SOA=["ns1.webfutur.com", "sysadmin.webfutur.net"],NS=["ns1.webfutur.com", "ns2.webfutur.com"],managed_zones=managed_zones,customer=customer,main_zone=data["name"],zone_file=zone_file,owner=owner,organisation=organisation,zone=data["name"],ROOT_IPv4=[],ROOT_IPv6=[],TTL=dict(base=300),MX=[],A=[],AAAA=[],CNAME=[],TXT=[],SRV=[]))
+    dns.insert(dict(SOA=["ns1.webfutur.com", "sysadmin.webfutur.net"],NS=["ns1.webfutur.com", "ns2.webfutur.com"],managed_zones=managed_zones,customer=customer,main_zone=data["name"],zone_file=zone_file,owner=owner,organisation=organisation,zone=data["name"],ROOT_IPv4=[],ROOT_IPv6=[],TTL=dict(base=300),MX=[],A=[],AAAA=[],CNAME=[],TXT=[],SRV=[], SPF=[]))
     return jsonify(status="Success")
 
 
@@ -181,7 +199,7 @@ def config_apply(data,username):
     dns.set_user_id()
     del zone['_id']
     templateLoader = jinja2.FileSystemLoader( searchpath="./templates/")
-    templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True )
+    templateEnv = jinja2.Environment( loader=templateLoader,trim_blocks=True, lstrip_blocks=True )
     ZONE_TEMPLATE_FILE = "template.zone"
     CONF_MASTER_TEMPLATE_FILE = "conf_master_template.tpl"
     CONF_SLAVE_TEMPLATE_FILE = "conf_slave_template.tpl"
@@ -196,12 +214,16 @@ def config_apply(data,username):
     soa = zone['SOA'] 
     ns = zone['NS'] 
     cname_records = zone['CNAME']
+    srv_records = zone['SRV']
+    spf_records = zone['SPF']
     a_records = zone['A']
     aaaa_records = aaaa_records=zone['AAAA']
     mx_records = zone['MX']
     txt_records = zone['TXT']
     cname_no_ttl = []
     cname_ttl = []
+    srv_no_ttl = []
+    srv_ttl = []
     for mx_record in cname_records:
         if "." in mx_record['destination']:
             mx_record['destination'] = mx_record['destination'] + "."
@@ -209,6 +231,13 @@ def config_apply(data,username):
             cname_no_ttl.append(mx_record)    
         else:
            cname_ttl.append(mx_record)
+    for srv_record in srv_records:
+        if "." in srv_record['target']:
+            srv_record['target'] = srv_record['target'] + "."
+        if srv_record['ttl'] == False:
+            srv_no_ttl.append(srv_record)    
+        else:
+           srv_ttl.append(srv_record)
     records = []
     ref_ipv6 = []
     for aaaa_record in aaaa_records:
@@ -223,7 +252,7 @@ def config_apply(data,username):
                 records.append(a_record)      
     serial = arrow.now().format('YYYYMMDDHHmmSS')
 
-    zone_file_output = zone_template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records)
+    zone_file_output = zone_template.render(root_ipv4=root_ipv4,root_ipv6=root_ipv6,min_ttl=min_ttl,soa=soa,ns=ns,serial=serial,cname_no_ttl=cname_no_ttl,cname_ttl=cname_ttl,records=a_records,aaaa_records=aaaa_records,mx_records=mx_records,txt_records=txt_records,spf_records=spf_records,srv_no_ttl=srv_no_ttl,srv_ttl=srv_ttl)
     with open('./output/' + zone["zone_file"], 'w') as f:
         f.write(zone_file_output)
     #backend.transfertZoneFile('ns1.webfutur.com', zone["zone_file"])

@@ -47,6 +47,7 @@ $TTL {{min_ttl}}
 ;
 ;	Alias "Aliases"
 ;
+
 {% for cname in cname_no_ttl %}
 {{ cname.name.ljust(15) }}    IN          CNAME       {{ cname.destination }} 
 {% endfor %}
@@ -64,6 +65,24 @@ $TTL {{min_ttl}}
 {{ txt.name.ljust(15) }}      IN          TXT       "{{ txt.entry }}" 
 {% endfor %}
 
+;
+;	SRV entries
+;
 
+{% for srv in srv_no_ttl %}
+{{ srv.protocol.ljust(30) }}	IN          SRV     {{ srv.priority.ljust(5) }}  {{ srv.weight.ljust(5) }}   {{ srv.port.ljust(5) }}   {{ srv.target.ljust(5) }} 
+{% endfor %}
+
+{% for srv in srv_ttl %}
+{{ srv.protocol.ljust(30) }}	{{ srv.ttl.ljust(10) }}  IN      SRV    {{ srv.priority.ljust(5) }}  {{ srv.weight.ljust(5) }}   {{ srv.port.ljust(5) }}   {{ srv.target.ljust(5) }}  
+{% endfor %}
+
+;
+;	SPF entries
+;
+
+{% for spf in spf_records %}
+{{ spf.name.ljust(15) }}      IN          SPF       "{{ spf.entry }}" 
+{% endfor %}
 
 
